@@ -73,7 +73,9 @@ def in_memory_db(monkeypatch):
 
     conn.execute('UPDATE books SET available_copies = 0 WHERE id = 3')
     conn.execute('UPDATE books SET available_copies = 4 WHERE id = 6')
-
+    # Update the return date for the borrow record
+    conn.execute('UPDATE borrow_records SET return_date = ? WHERE patron_id = ? AND book_id = ?', (datetime.now().isoformat(),"123456", 3,))
+    conn.execute('UPDATE books SET available_copies = 1 WHERE id = 3')
     conn.commit()
 
     # Patch get_db_connection to **always return the same connection**
@@ -85,7 +87,6 @@ def in_memory_db(monkeypatch):
 
 def test_add_book_valid_input(in_memory_db):
     """Test adding a book with valid input."""
-    """'The book' will be added into catelog with avalibility of 10"""
     success, message = library_service.add_book_to_catalog("The Book", "The Author", "1234567890986", 10)
     
     assert success == True
@@ -158,10 +159,49 @@ def test_add_book_with_author_length_too_long(in_memory_db):
     assert success == False
     assert "less than 100" in message
 
-def test_borrow_insert_fail(monkeypatch):
+def test_add_insert_fail(monkeypatch):
     monkeypatch.setattr(library_service, "insert_book", lambda *args, **kwargs: False)    
-    success, message = library_service.add_book_to_catalog("Fail Book", "Fail Author", "9999999999999", 5)
+    success, message = library_service.add_book_to_catalog("Fail Book", "Fail Author", "1111111111111", 5)
     
     assert success == False
     assert "adding" in message
 
+def test_exception_fail(monkeypatch):
+    class FakeConn:
+        def execute(self, *args, **kwargs):
+            raise Exception("DB error")
+        def commit(self):
+            pass
+        def close(self):
+            pass
+    monkeypatch.setattr(database, "get_db_connection", lambda: FakeConn())
+    success = database.update_borrow_record_return_date("123456", 3, datetime.now())
+    success2 = database.update_book_availability(3, 1)
+    success3 = database.insert_book("Fail Book", "Fail Author", "9999999999999", 5, 5)
+    success4 = database.insert_borrow_record("123456", 3, datetime.now(), datetime.now())
+    
+
+
+    assert success == False
+    assert success2 == False
+    assert success3 == False
+    assert success4 == False
+
+def test_init_and_add_sample_data_creates_tables_and_inserts(monkeypatch):
+    """Covers init_database + add_sample_data when DB is empty."""
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+
+    monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
+
+    database.init_database()
+    database.add_sample_data()
+
+    books = conn.execute("SELECT * FROM books").fetchall()
+    assert len(books) == 3  # 3 sample books added
+
+    borrow = conn.execute("SELECT * FROM borrow_records").fetchone()
+    assert borrow is not None
+
+    copies = conn.execute("SELECT available_copies FROM books WHERE id = 3").fetchone()[0]
+    assert copies == 0
