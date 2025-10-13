@@ -1,4 +1,4 @@
-names: CISC 327 Library System CI
+name: CISC 327 Library System CI
 
 on:
   push:
