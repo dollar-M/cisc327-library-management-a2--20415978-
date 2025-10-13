@@ -207,7 +207,7 @@ def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
         return json.dumps({ 
         'fee_amount': 0.00,
         'days_overdue': 0,
-        'status': 'No charges avaliable for this patron'
+        'status': 'No charges available for this patron'
     })
     
     # Look for the one book with book id

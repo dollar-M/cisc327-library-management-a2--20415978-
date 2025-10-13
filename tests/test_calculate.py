@@ -67,13 +67,19 @@ def in_memory_db(monkeypatch):
     conn.execute('''
         INSERT INTO borrow_records (patron_id, book_id, borrow_date, due_date)
         VALUES (?, ?, ?, ?)
+    ''', ('111111', 5,
+          (datetime.now() - timedelta(days=18)).isoformat(),
+          (datetime.now() - timedelta(days=4)).isoformat()))
+    conn.execute('''
+        INSERT INTO borrow_records (patron_id, book_id, borrow_date, due_date)
+        VALUES (?, ?, ?, ?)
     ''', ('999999', 6,
           (datetime.now() - timedelta(days=30)).isoformat(),
           (datetime.now() - timedelta(days=16)).isoformat()))
 
     conn.execute('UPDATE books SET available_copies = 0 WHERE id = 3')
     conn.execute('UPDATE books SET available_copies = 4 WHERE id = 6')
-
+    conn.execute('UPDATE books SET available_copies = 1 WHERE id = 5')
     conn.commit()
 
     # Patch get_db_connection to **always return the same connection**
@@ -118,3 +124,28 @@ def test_calculate_invalid_book_id(in_memory_db):
     result = json.loads(library_service.calculate_late_fee_for_book("123456", -1))
 
     assert "invalid book id" in result['status']
+
+# added test case
+def test_calculate_book_overdue_fee(in_memory_db):
+    """Test calculate fee for a book that is overdue for patron id 111111 that overdue for 4 days."""
+    result = json.loads(library_service.calculate_late_fee_for_book("111111", 5))
+
+    assert result['fee_amount'] == 2.0
+    assert result['days_overdue'] == 4
+    assert "overdue" in result['status']
+
+def test_calculate_book_by_patron_id_never_borrowed(in_memory_db):
+    """Test calculate fee for a book that was never borrowed by the patron."""
+    result = json.loads(library_service.calculate_late_fee_for_book("101010", 1))
+
+    assert result['fee_amount'] == 0.00
+    assert result['days_overdue'] == 0
+    assert "No charges" in result['status']
+
+def test_calculate_book_with_nonexistent_book_id(in_memory_db):
+    """Test calculate fee for a book that does not exist."""
+    result = json.loads(library_service.calculate_late_fee_for_book("123456", 999))
+
+    assert result['fee_amount'] == 0.00
+    assert result['days_overdue'] == 0
+    assert "Book not found" in result['status']

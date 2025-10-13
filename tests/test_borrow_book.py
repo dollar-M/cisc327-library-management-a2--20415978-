@@ -52,7 +52,8 @@ def in_memory_db(monkeypatch):
         ('Moby Dick', 'Herman Melville', '9781503280786', 2),
         ('The Catcher in the Rye', 'J.D. Salinger', '9780316769488', 5),
         ('The Hobbit', 'J.R.R. Tolkien', '9780345339683', 4),
-        ('Fahrenheit 451', 'Ray Bradbury', '9781451673319', 2)
+        ('Fahrenheit 451', 'Ray Bradbury', '9781451673319', 2),
+        ('Brave New World', 'Aldous Huxley', '9780060850524', 1)
     ]
     for title, author, isbn, copies in sample_books:
         conn.execute('''
@@ -65,9 +66,12 @@ def in_memory_db(monkeypatch):
     ''', ('999999', 6,
           (datetime.now() - timedelta(days=30)).isoformat(),
           (datetime.now() - timedelta(days=16)).isoformat()))
-
-
-
+    conn.execute('''
+        INSERT INTO borrow_records (patron_id, book_id, borrow_date, due_date)
+        VALUES (?, ?, ?, ?)
+    ''', ('000000', 9,
+          (datetime.now() - timedelta(days=30)).isoformat(),
+          (datetime.now() - timedelta(days=16)).isoformat()))
     borrowed_book_ids = [1, 2, 4, 5, 7]
     for book_id in borrowed_book_ids:
         conn.execute('''
@@ -78,7 +82,7 @@ def in_memory_db(monkeypatch):
             (datetime.now() + timedelta(days=9)).isoformat()))
         conn.execute('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?', (book_id,))
         conn.execute('UPDATE books SET available_copies = 4 WHERE id = 6')
-
+        conn.execute('UPDATE books SET available_copies = 0 WHERE id = 9')
     conn.commit()
 
     # Patch get_db_connection to **always return the same connection**
@@ -131,3 +135,34 @@ def test_borrow_book_reach_limit(in_memory_db):
     assert success == False
     assert "maximum" in message
     #book id 4 is test book with 6 copies
+
+# added test case
+def test_borrow_book_with_no_copies(in_memory_db):
+    """Test borrowing a book that has no available copies."""
+    success, message = library_service.borrow_book_by_patron("444444", 9)
+    assert success == False
+    assert "not available" in message
+
+def test_borrow_book_twice_same_book(in_memory_db):
+    """Test borrwing a patron id that borrowed the same book twice."""
+    success, message = library_service.borrow_book_by_patron("999999", 6)
+    assert success == False
+    assert "once" in message
+
+def test_borrow_insert_fail(monkeypatch):
+    monkeypatch.setattr(library_service, "insert_borrow_record", lambda *args, **kwargs: False)
+    monkeypatch.setattr(library_service, "update_book_availability", lambda *args, **kwargs: True)
+    
+    success, message = library_service.borrow_book_by_patron("111111", 1)
+    
+    assert success == False
+    assert "creating" in message
+
+def test_borrow_update_fail(monkeypatch):
+    monkeypatch.setattr(library_service, "update_book_availability", lambda *args, **kwargs: False)
+    monkeypatch.setattr(library_service, "insert_borrow_record", lambda *args, **kwargs: True)
+    
+    success, message = library_service.borrow_book_by_patron("111111", 1)
+    
+    assert success == False
+    assert "updating" in message

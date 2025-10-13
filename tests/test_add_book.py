@@ -126,4 +126,42 @@ def test_add_book_zero_copies(in_memory_db):
 
     assert success == True
     assert "successfully added" in message
+
+# test cases added
+def test_add_book_invalid_author(in_memory_db):
+    """Test adding a book with an invalid author."""
+    success, message = library_service.add_book_to_catalog("Test Book", "", "1234567890123", 5)
+
+    assert success == False
+    assert "Author is required" in message
+
+def test_add_book_duplicate_isbn(in_memory_db):
+    """Test adding a book with a duplicate ISBN."""
+    success, message = library_service.add_book_to_catalog("Another Book", "Another Author", "9780451524935", 3)
+
+    assert success == False
+    assert "already exists" in message
+
+def test_add_book_with_title_length_too_long(in_memory_db):
+    """Test adding a book with a title that is too long."""
+    long_title = "A" * 201
+    success, message = library_service.add_book_to_catalog(long_title, "Test Author", "1234567890123", 5)
+
+    assert success == False
+    assert "less than 200" in message
+
+def test_add_book_with_author_length_too_long(in_memory_db):
+    """Test adding a book with an author name that is too long."""
+    long_author = "A" * 101
+    success, message = library_service.add_book_to_catalog("Test Book", long_author, "1234567890123", 5)
+
+    assert success == False
+    assert "less than 100" in message
+
+def test_borrow_insert_fail(monkeypatch):
+    monkeypatch.setattr(library_service, "insert_book", lambda *args, **kwargs: False)    
+    success, message = library_service.add_book_to_catalog("Fail Book", "Fail Author", "9999999999999", 5)
     
+    assert success == False
+    assert "adding" in message
+

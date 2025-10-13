@@ -108,7 +108,7 @@ def test_search_book_with_title(in_memory_db):
     assert result[0]['author'] == 'George Orwell'
 
 def test_search_book_with_author(in_memory_db):
-    """Test search book with valid title"""
+    """Test search book with valid author"""
     result = library_service.search_books_in_catalog("F. Scott Fitzgerald", "author")
     
     assert result[0]['isbn'] == '9780743273565'
@@ -131,3 +131,30 @@ def test_search_book_with_ISBN_type(in_memory_db):
     assert "isbn" in result[0]
     assert "available_copies" in result[0]
 
+
+# added test cases
+def test_search_book_with_wrong_search_type(in_memory_db):
+    """Test search book with wrong search type"""
+    result = library_service.search_books_in_catalog("1234567890123", "wrong_type")
+    
+    assert len(result) == 0
+def test_search_book_with_nonexistent_book(in_memory_db):
+    """Test search book with invalid title"""
+    result = library_service.search_books_in_catalog("1234567890123", "title")
+
+    assert len(result) == 0
+def test_search_book_with_invalid_author(in_memory_db):
+    """Test search book with invalid author"""
+    result = library_service.search_books_in_catalog("Invalid Author", "author")
+    assert len(result) == 0
+def test_search_title_no_match(in_memory_db):
+    result = library_service.search_books_in_catalog("Nonexistent Book", "title")
+    assert result == []
+
+def test_search_author_no_match(in_memory_db):
+    result = library_service.search_books_in_catalog("Nonexistent Author", "author")
+    assert result == []
+
+def test_search_ISBN_no_match(in_memory_db):
+    result = library_service.search_books_in_catalog("0000000000000", "isbn")
+    assert result == []
