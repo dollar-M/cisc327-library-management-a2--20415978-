@@ -125,5 +125,5 @@ def test_status_report_non_numeric_patron(in_memory_db):
     """Test with patron that is non-numeric, returned dict should be empty"""
     result = library_service.get_patron_status_report("hello")
 
-    assert len(result) == 1
+    assert len(result) == 0
 
