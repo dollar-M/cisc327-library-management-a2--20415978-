@@ -149,7 +149,7 @@ def test_borrow_book_twice_same_book(in_memory_db):
     assert success == False
     assert "once" in message
 
-def test_borrow_insert_fail(monkeypatch):
+def test_borrow_insert_fail(in_memory_db,monkeypatch):
     monkeypatch.setattr(library_service, "insert_borrow_record", lambda *args, **kwargs: False)
     monkeypatch.setattr(library_service, "update_book_availability", lambda *args, **kwargs: True)
     
@@ -158,7 +158,7 @@ def test_borrow_insert_fail(monkeypatch):
     assert success == False
     assert "creating" in message
 
-def test_borrow_update_fail(monkeypatch):
+def test_borrow_update_fail(in_memory_db,monkeypatch):
     monkeypatch.setattr(library_service, "update_book_availability", lambda *args, **kwargs: False)
     monkeypatch.setattr(library_service, "insert_borrow_record", lambda *args, **kwargs: True)
     

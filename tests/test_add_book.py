@@ -159,7 +159,7 @@ def test_add_book_with_author_length_too_long(in_memory_db):
     assert success == False
     assert "less than 100" in message
 
-def test_add_insert_fail(monkeypatch):
+def test_add_insert_fail(in_memory_db,monkeypatch):
     monkeypatch.setattr(library_service, "insert_book", lambda *args, **kwargs: False)    
     success, message = library_service.add_book_to_catalog("Fail Book", "Fail Author", "1111111111111", 5)
     

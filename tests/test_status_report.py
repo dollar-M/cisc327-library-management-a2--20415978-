@@ -77,8 +77,8 @@ def in_memory_db(monkeypatch):
     conn.commit()
 
     # Patch get_db_connection to **always return the same connection**
-    monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
-
+    monkeypatch.setattr(library_service, "get_db_connection", lambda: NonClosingConnection(conn))
+    
     yield conn  # keep connection alive during test
     conn.close()
 
