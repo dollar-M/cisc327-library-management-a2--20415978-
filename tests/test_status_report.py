@@ -76,7 +76,7 @@ def in_memory_db(monkeypatch):
 
     conn.commit()
 
-    # Patch get_db_connection to **always return the same connection**
+    # Patch get_db_connection 
     monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
     monkeypatch.setattr(library_service, "get_db_connection", lambda: NonClosingConnection(conn))
     
@@ -84,10 +84,10 @@ def in_memory_db(monkeypatch):
     conn.close()
 
 
-"""assume the function has been implemented"""
 def test_status_report__valid_patron(in_memory_db):
     """Test if the status report have needed element"""
     result = library_service.get_patron_status_report("123456")
+    
     assert "borrowed_book_with_due_date" in result # List[Dict]
     assert "fee_amount" in result 
     assert "currently_borrowed_number" in result

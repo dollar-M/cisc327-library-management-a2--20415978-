@@ -84,8 +84,6 @@ def in_memory_db(monkeypatch):
         conn.execute('UPDATE books SET available_copies = 4 WHERE id = 6')
         conn.execute('UPDATE books SET available_copies = 0 WHERE id = 9')
     conn.commit()
-
-    # Patch get_db_connection to **always return the same connection**
     monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
 
     yield conn  # keep connection alive during test

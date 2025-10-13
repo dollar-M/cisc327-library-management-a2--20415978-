@@ -76,14 +76,12 @@ def in_memory_db(monkeypatch):
 
     conn.commit()
 
-    # Patch get_db_connection to **always return the same connection**
+    # Patch get_db_connection
     monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
 
     yield conn  # keep connection alive during test
     conn.close()
-"""assume the function has been implemented
-with returned value in list of dict(keys: ID,Titile,Author,ISBN,Availability)
-"""
+
 # made changes to the key of dict
 def test_search_book_with_ISBN(in_memory_db):
     """Test search book with valid ISBN"""
@@ -135,26 +133,29 @@ def test_search_book_with_ISBN_type(in_memory_db):
 # added test cases
 def test_search_book_with_wrong_search_type(in_memory_db):
     """Test search book with wrong search type"""
-    result = library_service.search_books_in_catalog("1234567890123", "wrong_type")
+    result = library_service.search_books_in_catalog("1234567890123", "notintype")
     
     assert len(result) == 0
+
 def test_search_book_with_nonexistent_book(in_memory_db):
     """Test search book with invalid title"""
     result = library_service.search_books_in_catalog("1234567890123", "title")
 
     assert len(result) == 0
+
 def test_search_book_with_invalid_author(in_memory_db):
     """Test search book with invalid author"""
-    result = library_service.search_books_in_catalog("Invalid Author", "author")
+    result = library_service.search_books_in_catalog("Not exist", "author")
     assert len(result) == 0
+
 def test_search_title_no_match(in_memory_db):
-    result = library_service.search_books_in_catalog("Nonexistent Book", "title")
-    assert result == []
+    result = library_service.search_books_in_catalog("Not exist", "title")
+    assert len(result) == 0
 
 def test_search_author_no_match(in_memory_db):
-    result = library_service.search_books_in_catalog("Nonexistent Author", "author")
-    assert result == []
+    result = library_service.search_books_in_catalog("Not exist", "author")
+    assert len(result) == 0
 
 def test_search_ISBN_no_match(in_memory_db):
     result = library_service.search_books_in_catalog("0000000000000", "isbn")
-    assert result == []
+    assert len(result) == 0

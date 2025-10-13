@@ -76,10 +76,11 @@ def in_memory_db(monkeypatch):
 
     conn.commit()
 
-    # Patch get_db_connection to **always return the same connection**
+    # Patch get_db_connection
     monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
 
     yield conn  # keep connection alive during test
+    # stop it from closing and cause no such table errors
     conn.close()
 
 def test_return_book_by_valid_patron(in_memory_db): #msg change
@@ -124,6 +125,6 @@ def test_return_book_by_checking_amount(in_memory_db):
 
     assert success == True
     assert "amount" in message
-    assert "15" in message # can be wrong if date calculation is different
+    assert "15" in message 
 
 
