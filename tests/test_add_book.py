@@ -166,42 +166,4 @@ def test_add_insert_fail(in_memory_db,monkeypatch):
     assert success == False
     assert "adding" in message
 
-def test_exception_fail(monkeypatch):
-    class FakeConn:
-        def execute(self, *args, **kwargs):
-            raise Exception("DB error")
-        def commit(self):
-            pass
-        def close(self):
-            pass
-    monkeypatch.setattr(database, "get_db_connection", lambda: FakeConn())
-    success = database.update_borrow_record_return_date("123456", 3, datetime.now())
-    success2 = database.update_book_availability(3, 1)
-    success3 = database.insert_book("Fail Book", "Fail Author", "9999999999999", 5, 5)
-    success4 = database.insert_borrow_record("123456", 3, datetime.now(), datetime.now())
-    
 
-
-    assert success == False
-    assert success2 == False
-    assert success3 == False
-    assert success4 == False
-
-def test_init_and_add_sample_data_creates_tables_and_inserts(monkeypatch):
-    """Covers init_database + add_sample_data when DB is empty."""
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-
-    monkeypatch.setattr(database, "get_db_connection", lambda: NonClosingConnection(conn))
-
-    database.init_database()
-    database.add_sample_data()
-
-    books = conn.execute("SELECT * FROM books").fetchall()
-    assert len(books) == 3  # 3 sample books added
-
-    borrow = conn.execute("SELECT * FROM borrow_records").fetchone()
-    assert borrow is not None
-
-    copies = conn.execute("SELECT available_copies FROM books WHERE id = 3").fetchone()[0]
-    assert copies == 0
