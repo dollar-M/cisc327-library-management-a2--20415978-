@@ -2,7 +2,7 @@
 Library Service Module - Business Logic Functions
 Contains all the core business logic for the Library Management System
 """
-from  payment_service import PaymentGateway
+from services.payment_service import PaymentGateway
 
 
 import json
