@@ -24,7 +24,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        pytest --cov=library_service --cov-report=xml
+        pytest --cov=services.library_service --cov-report=xml
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
