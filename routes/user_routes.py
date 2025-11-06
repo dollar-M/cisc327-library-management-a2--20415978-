@@ -1,6 +1,6 @@
 # routes/user.py
 from flask import Blueprint, render_template, request, flash
-from library_service import get_patron_status_report
+from services.library_service import get_patron_status_report
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
 
