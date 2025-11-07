@@ -2,11 +2,7 @@ import pytest
 from unittest.mock import Mock
 from services import library_service
 from services.payment_service import PaymentGateway
-import json
-import time
-"""
-network error exception handling
-"""
+
 
 def test_pay_fee_success(mocker):
     """Test successful payment of late fee."""
