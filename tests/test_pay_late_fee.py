@@ -63,9 +63,9 @@ def test_zero_late_fees (mocker):
     mock_gateway.process_payment.assert_not_called()
 
 def test_network_error_exception_handling(mocker):
-    """Test successful payment of late fee."""
+    """Test network error exception."""
     mock_gateway = Mock(spec=PaymentGateway)
-    mock_cal = mocker.patch("services.library_service.calculate_late_fee_for_book", return_value={'fee_amount': 3,'days_overdue': 6,'status': "Book overdue"})
+    mocker.patch("services.library_service.calculate_late_fee_for_book", return_value={'fee_amount': 3,'days_overdue': 6,'status': "Book overdue"})
     mocker.patch("services.library_service.get_book_by_id", return_value={'id': 2, 'title': "Test Book"})
     mock_gateway.process_payment.return_value = ConnectionError("Network error")
     
@@ -75,4 +75,35 @@ def test_network_error_exception_handling(mocker):
     assert "error" in msg
     mock_gateway.process_payment.assert_called_once_with(patron_id='123456', amount=3, description="Late fees for 'Test Book'")
 
+
+
+# ouside from requied tests
+def test_no_fee_info(mocker):
+    """Test with calculate_late_fee_for_book not working as requried."""
+    mock_gateway = Mock(spec=PaymentGateway)
+    mocker.patch("services.library_service.calculate_late_fee_for_book", return_value={'days_overdue': 0,'status': "Book not overdue"})
+    mocker.patch("services.library_service.get_book_by_id", return_value={'id': 2, 'title': "Test Book"})
+    mock_gateway.process_payment.return_value = True, f"txn_123456_1730946927", f"Payment of $3 called successfully"
+    
+
+    result,msg,opmsg = library_service.pay_late_fees("123456", 2,payment_gateway=mock_gateway)
+
+    assert result is False
+    assert "Unable to calculate" in msg
+    mock_gateway.process_payment.assert_not_called()
+
+def test_invalid_book(mocker):
+    """Test with book with book id not found."""
+    mock_gateway = Mock(spec=PaymentGateway)
+    mocker.patch("services.library_service.calculate_late_fee_for_book", return_value={'fee_amount': 3,'days_overdue': 6,'status': "Book overdue"})
+    mocker.patch("services.library_service.get_book_by_id", return_value=None)
+    mock_gateway.process_payment.return_value = True, f"txn_123456_1730946927", f"Payment of $3 called successfully"
+    
+
+    result,msg,opmsg = library_service.pay_late_fees("123456", 2,payment_gateway=mock_gateway)
+
+    assert result is False
+    assert "not found" in msg
+
+    mock_gateway.process_payment.assert_not_called()
 

@@ -64,3 +64,25 @@ def test_invalid_exceed_refund_amounts():
 
 
 # extra check for exception handling
+def test_declined_refund():
+    """Test declined refund_payment function."""
+    mock_gateway = Mock(spec=PaymentGateway)
+    mock_gateway.refund_payment.return_value = False, "Invalid refund amount"
+    
+    result,msg = library_service.refund_late_fee_payment("txn_123456_1730946927_1730946928", 13,payment_gateway=mock_gateway)
+
+    assert result is False
+    assert "Refund failed" in msg
+    mock_gateway.refund_payment.assert_called_once_with('txn_123456_1730946927_1730946928', 13)
+
+
+def test_exception_handling(mocker):
+    """Test network error exception."""
+    mock_gateway = Mock(spec=PaymentGateway)
+    mock_gateway.refund_payment.return_value = ConnectionError("Connection error")
+    
+    result,msg = library_service.refund_late_fee_payment("txn_123456_1730946927_1730946928", 13,payment_gateway=mock_gateway)
+
+    assert result is False
+    assert "Refund processing error" in msg
+    mock_gateway.refund_payment.assert_called_once_with('txn_123456_1730946927_1730946928', 13)
