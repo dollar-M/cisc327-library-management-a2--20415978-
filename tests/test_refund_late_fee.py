@@ -14,7 +14,8 @@ def test_refund_fee_success():
 
     assert result is True
     assert "refund_txn_123456" in msg
-    mock_gateway.refund_payment.assert_called_once_with('txn_123456_1730946927_1730946928', 10.5)
+    mock_gateway.refund_payment.assert_called_once()
+    mock_gateway.refund_payment.assert_called_with('txn_123456_1730946927_1730946928', 10.5)
 
 
 def test_invalid_transaction_ID_rejection():
@@ -73,11 +74,12 @@ def test_declined_refund():
 
     assert result is False
     assert "Refund failed" in msg
-    mock_gateway.refund_payment.assert_called_once_with('txn_123456_1730946927_1730946928', 13)
+    mock_gateway.refund_payment.assert_called_once()
+    mock_gateway.refund_payment.assert_called_with('txn_123456_1730946927_1730946928', 13)
 
 
 def test_exception_handling(mocker):
-    """Test network error exception."""
+    """Test exception."""
     mock_gateway = Mock(spec=PaymentGateway)
     mock_gateway.refund_payment.return_value = ConnectionError("Connection error")
     
@@ -85,4 +87,5 @@ def test_exception_handling(mocker):
 
     assert result is False
     assert "Refund processing error" in msg
-    mock_gateway.refund_payment.assert_called_once_with('txn_123456_1730946927_1730946928', 13)
+    mock_gateway.refund_payment.assert_called_once()
+    mock_gateway.refund_payment.assert_called_with('txn_123456_1730946927_1730946928', 13)
