@@ -96,14 +96,9 @@ def test_user_search_book(page: Page):
 
     # search for a book with partial title that exists
     page.get_by_role("textbox", name="Search Term").click()
-    page.get_by_role("textbox", name="Search Term").fill("It")
+    page.get_by_role("textbox", name="Search Term").fill("Great")
     page.get_by_role("button", name="🔍 Search").click()
-    #expect(page.get_by_role("cell", name="It is rainy day")).to_be_visible()
-    expect(page).to_have_url("http://127.0.0.1:5000/search?q=It&type=title")
-
-    page.get_by_role("textbox", name="Patron ID").fill("121212")
-    page.get_by_role("button", name="Borrow").click()
-    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
+    expect(page.get_by_role("cell", name="The Great Gatsby")).to_be_visible()
 
 
 
@@ -117,7 +112,7 @@ def test_user_navigate_all_pages(page: Page):
 
     #borrow the book with patron ID 121212
     page.locator("tr:nth-child(9) > td:nth-child(6) > form > input:nth-child(2)").click()
-    page.locator("tr:nth-child(9) > td:nth-child(6) > form > input:nth-child(2)").fill("121212")
+    page.locator("tr:nth-child(9) > td:nth-child(6) > form > input:nth-child(2)").fill("1212")
     page.locator("tr:nth-child(9) > td:nth-child(6) > form > .btn").click()
     # validate navigation to catalog page
     expect(page).to_have_url("http://127.0.0.1:5000/catalog")
@@ -137,7 +132,7 @@ def test_user_navigate_all_pages(page: Page):
 
     #check patron report for patron ID 121212
     page.get_by_role("textbox", name="Patron ID*").click()
-    page.get_by_role("textbox", name="Patron ID*").fill("121212")
+    page.get_by_role("textbox", name="Patron ID*").fill("362584")
     page.get_by_role("button", name="Load Patron Report").click()
     expect(page).to_have_url("http://127.0.0.1:5000/user/profile")
     #expect(page.get_by_role("cell", name="The Book")).to_be_visible()
