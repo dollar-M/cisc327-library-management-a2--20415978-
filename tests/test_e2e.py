@@ -58,30 +58,6 @@ def test_user_add_book_with_invalid_isbn(page: Page):
     expect(page.get_by_text("ISBN must be exactly 13 digits.")).to_be_visible()
 
 
-"""def add_book(page: Page):
-    title = "The Great G"
-    author = "F."
-    isbn = "9780134190440"
-    total_copies = 5
-    page.goto("http://127.0.0.1:5000")
-    # go to add book page
-    page.get_by_role("link", name="➕ Add Book").click()
-    # fill the add book form
-    page.get_by_role("textbox", name="Title *").click()
-    page.get_by_role("textbox", name="Title *").fill(title)
-    page.get_by_role("textbox", name="Author *").click()
-    page.get_by_role("textbox", name="Author *").fill(author)
-    page.get_by_role("textbox", name="ISBN *").click()
-    page.get_by_role("textbox", name="ISBN *").fill(isbn)
-
-    page.get_by_role("spinbutton", name="Total Copies *").click()
-    page.get_by_role("spinbutton", name="Total Copies *").fill(str(total_copies))
-    # submit the form
-    page.get_by_role("button", name="Add Book to Catalog").click()
-    # check for success message
-    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
-    expect(page.get_by_text(f'Book "{title}" added successfully!')).to_be_visible()"""
-
 
 """Test end-to-end user interactions on borr search the book using a patron ID."""
 def test_user_search_book(page: Page):
@@ -110,32 +86,42 @@ def test_user_navigate_all_pages(page: Page):
     # check the book is visible
     #expect(page.get_by_role("cell", name="The Book")).to_be_visible()
 
-    #borrow the book with patron ID 121212
-    page.locator("tr:nth-child(9) > td:nth-child(6) > form > input:nth-child(2)").click()
-    page.locator("tr:nth-child(9) > td:nth-child(6) > form > input:nth-child(2)").fill("1212")
-    page.locator("tr:nth-child(9) > td:nth-child(6) > form > .btn").click()
-    # validate navigation to catalog page
-    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
-
     # navigate to add book
     page.get_by_role("link", name="➕ Add Book").click()
     expect(page).to_have_url("http://127.0.0.1:5000/add_book")
-    # navigate to return book
-    page.get_by_role("link", name="↩️ Return Book").click()
-    expect(page).to_have_url("http://127.0.0.1:5000/return")
-    # navigate to search
+    # add a book to borrow
+    page.get_by_role("textbox", name="Title *").click()
+    page.get_by_role("textbox", name="Title *").fill("Book1 to Borrow")
+    page.get_by_role("textbox", name="Author *").click()
+    page.get_by_role("textbox", name="Author *").fill("Author1")
+    page.get_by_role("textbox", name="ISBN *").click()
+    page.get_by_role("textbox", name="ISBN *").fill("0101010101010")
+    page.get_by_role("spinbutton", name="Total Copies *").click()
+    page.get_by_role("spinbutton", name="Total Copies *").fill("3")
+    # submit the form
+    page.get_by_role("button", name="Add Book to Catalog").click()
+    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
+    # search the book just added
     page.get_by_role("link", name="🔍 Search").click()
-    expect(page).to_have_url("http://127.0.0.1:5000/search")
-    # navigate to patron report
-    page.get_by_role("link", name="📋 Patron Report").click()
-    expect(page).to_have_url("http://127.0.0.1:5000/user/profile")
+    page.get_by_role("textbox", name="Search Term").click()
+    page.get_by_role("textbox", name="Search Term").fill("Book1")
+    page.get_by_role("button", name="🔍 Search").click()
+    page.get_by_role("textbox", name="Patron ID").click()
+    page.get_by_role("textbox", name="Patron ID").fill("101010")
+    page.get_by_role("button", name="🔍 Search").click()
+    expect(page).get_by_role("cell", name="The Great Gatsby")
+    # borrow the book
+    page.get_by_role("button", name="Borrow").click()
+    # check borrow success by check return url
+    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
 
-    #check patron report for patron ID 121212
-    page.get_by_role("textbox", name="Patron ID*").click()
-    page.get_by_role("textbox", name="Patron ID*").fill("362584")
-    page.get_by_role("button", name="Load Patron Report").click()
-    expect(page).to_have_url("http://127.0.0.1:5000/user/profile")
-    #expect(page.get_by_role("cell", name="The Book")).to_be_visible()
+    #return book borrowed
+    page.get_by_role("link", name="↩️ Return").click()
+    page.get_by_role("textbox", name="Patron ID").click()
+    page.get_by_role("textbox", name="Patron ID").fill("101010")
+    page.get_by_role("button", name="Get Borrowed Books").click()
+    page.get_by_role("button", name="Return").click()
+    expect(page).to_have_url("http://127.0.0.1:5000/catalog")
 
 
 
