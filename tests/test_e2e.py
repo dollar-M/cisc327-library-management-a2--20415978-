@@ -5,29 +5,46 @@ import pytest
 from datetime import datetime, timedelta
 import requests
 from playwright.sync_api import Page, expect
+import os
+import tempfile
+import shutil
 
 @pytest.fixture(scope="session", autouse=True)
 def flask_server():
-    """Start the Flask app in a subprocess for the entire test session."""
-    proc = subprocess.Popen(["python", "app.py"])
-    
-    # Wait for Flask to be up
-    for _ in range(20):  # 20 * 0.5s = 10s max
+    # use a temp directory for the test DB to guarantee isolation
+    tmpdir = tempfile.mkdtemp()
+    test_db_path = os.path.join(tmpdir, "test_library.db")
+
+    env = os.environ.copy()
+    # tell the app where to create the DB; implement app support for DATABASE_PATH
+    env["DATABASE_PATH"] = test_db_path
+    env["FLASK_ENV"] = "testing"
+
+    # remove any leftover file just in case
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
+
+    proc = subprocess.Popen(["python", "app.py"], env=env)
+
+    # Wait longer for Flask to be up (increase timeout)
+    for _ in range(60):  # 60 * 0.5s = 30s max
         try:
             r = requests.get("http://127.0.0.1:5000")
             if r.status_code == 200:
                 break
-        except:
+        except Exception:
             time.sleep(0.5)
     else:
         proc.terminate()
+        shutil.rmtree(tmpdir)
         raise RuntimeError("Flask server did not start in time")
-    
-    yield  # tests run here
-    
-    # Teardown: stop Flask
+
+    yield
+
     proc.terminate()
     proc.wait()
+    # cleanup DB
+    shutil.rmtree(tmpdir)
 
 
 def test_web(page: Page):
