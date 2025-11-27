@@ -80,6 +80,10 @@ def test_user_search_book(page: Page):
 
 """"Flow: go to catalog, check book visible, borrow book with id 121212, check message, go to return/search/patron report page, input id 121212, check report."""
 def test_user_navigate_all_pages(page: Page):
+    book = "Book3 to Borrow"
+    author = "Author3"
+    isbn = "3030303030303"
+
     page.goto("http://127.0.0.1:5000")
     # navigate to catalog
     page.get_by_role("link", name="📖 Catalog").click()
@@ -91,11 +95,11 @@ def test_user_navigate_all_pages(page: Page):
     expect(page).to_have_url("http://127.0.0.1:5000/add_book")
     # add a book to borrow
     page.get_by_role("textbox", name="Title *").click()
-    page.get_by_role("textbox", name="Title *").fill("Book2 to Borrow")
+    page.get_by_role("textbox", name="Title *").fill(book)
     page.get_by_role("textbox", name="Author *").click()
-    page.get_by_role("textbox", name="Author *").fill("Author2")
+    page.get_by_role("textbox", name="Author *").fill(author)
     page.get_by_role("textbox", name="ISBN *").click()
-    page.get_by_role("textbox", name="ISBN *").fill("0202020202020")
+    page.get_by_role("textbox", name="ISBN *").fill(isbn)
     page.get_by_role("spinbutton", name="Total Copies *").click()
     page.get_by_role("spinbutton", name="Total Copies *").fill("3")
     # submit the form
@@ -104,12 +108,12 @@ def test_user_navigate_all_pages(page: Page):
     # search the book just added
     page.get_by_role("link", name="🔍 Search").click()
     page.get_by_role("textbox", name="Search Term").click()
-    page.get_by_role("textbox", name="Search Term").fill("Book2")
+    page.get_by_role("textbox", name="Search Term").fill(book)
     page.get_by_role("button", name="🔍 Search").click()
-    expect(page.get_by_role("cell", name="Book2 to Borrow")).to_be_visible()
+    expect(page.get_by_role("cell", name=book)).to_be_visible()
     # borrow the book
     page.get_by_role("textbox", name="Patron ID").click()
-    page.get_by_role("textbox", name="Patron ID").fill("202020")
+    page.get_by_role("textbox", name="Patron ID").fill(isbn)
     page.get_by_role("button", name="Borrow").click()
     # check borrow success by check return url
     expect(page).to_have_url("http://127.0.0.1:5000/catalog")
