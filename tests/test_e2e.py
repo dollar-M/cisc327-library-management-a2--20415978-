@@ -80,10 +80,11 @@ def test_user_search_book(page: Page):
 
 """"Flow: go to catalog, check book visible, borrow book with id 121212, check message, go to return/search/patron report page, input id 121212, check report."""
 def test_user_navigate_all_pages(page: Page):
-    # follow need to change every time because user flow change database
-    book = "Book4 to Borrow"
-    author = "Author4"
-    isbn = "4040404040404"
+    ##########################Need to change every time because user flow change database##########################
+    book = "Book5 to Borrow"
+    author = "Author5"
+    isbn = "5050505050505"
+    ###############################################################################################################
 
     page.goto("http://127.0.0.1:5000")
     # navigate to catalog
