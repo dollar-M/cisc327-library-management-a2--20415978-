@@ -3,6 +3,8 @@ import subprocess
 import time
 import pytest
 from datetime import datetime, timedelta
+import uuid
+import random
 import requests
 from playwright.sync_api import Page, expect
 
@@ -80,11 +82,16 @@ def test_user_search_book(page: Page):
 
 """"Flow: go to catalog, check book visible, borrow book with id 121212, check message, go to return/search/patron report page, input id 121212, check report."""
 def test_user_navigate_all_pages(page: Page):
-    ##########################Need to change every time because user flow change database##########################
-    book = "Book5 to Borrow"
+    """book = "Book5 to Borrow"
     author = "Author5"
-    isbn = "5050505050505"
-    ###############################################################################################################
+    isbn = "5050505050505"""
+    uid = uuid.uuid4().hex[:10]  # 10 random hex chars
+
+    book   = f"Book Borrow {uid}"
+    author = f"Author {uid}"
+    isbn = ''.join(random.choices("0123456789", k=13))
+    # 6- digit patron ID
+    patron = ''.join(random.choices("0123456789", k=6))
 
     page.goto("http://127.0.0.1:5000")
     # navigate to catalog
@@ -115,7 +122,7 @@ def test_user_navigate_all_pages(page: Page):
     expect(page.get_by_role("cell", name=book)).to_be_visible()
     # borrow the book
     page.get_by_role("textbox", name="Patron ID").click()
-    page.get_by_role("textbox", name="Patron ID").fill(isbn)
+    page.get_by_role("textbox", name="Patron ID").fill(patron)
     page.get_by_role("button", name="Borrow").click()
     # check borrow success by check return url
     expect(page).to_have_url("http://127.0.0.1:5000/catalog")
